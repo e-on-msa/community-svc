@@ -1,7 +1,8 @@
-const { Post, PostImage, sequelize } = require("../models");
+const { Post, PostImage, Board, sequelize } = require("../models");
 const userClient = require("../services/userClient");
 const path = require("path");
 
+// 게시글 작성
 exports.createPost = async (req, res) => {
   const { board_id } = req.params;
   const user_id = req.user.user_id;
@@ -54,7 +55,58 @@ exports.createPost = async (req, res) => {
   }
 };
 
-// TODO: 게시글 목록 조회
+// 게시글 목록 조회
+exports.getPostList = async (req, res) => {
+  const { board_id } = req.params;
+  const userId = req.headers["x-user-id"];
+  const userType = req.headers["x-user-type"];
+  try {
+    // 1. 게시판 존재 여부 확인
+    const board = await Board.findByPk(Number(board_id));
+    if (!board) {
+      return res.status(404).json({ error: "게시판을 찾을 수 없습니다." });
+    }
+
+    // 2. 접근 권한 체크
+    if (board.board_audience !== "all") {
+      // 전체 공개 게시판이 아닐 경우
+      if (!userId) {
+        // 로그인하지 않았을 경우
+        return res.status(401).json({ error: "로그인이 필요합니다." });
+      }
+      if (userType !== "admin" && board.board_audience !== userType) {
+        return res.status(403).json({ error: "접근 권한이 없습니다." });
+      }
+    }
+
+    // 3. 게시글 목록 조회
+    // admin이면 HIDDEN 포함, 일반 사용자면 ACTIVE만
+    const whereClause = {
+      board_id: Number(board_id), // URL 파라미터는 문자열이므로 숫자로 변환
+      ...(userType !== "admin" && { status: "ACTIVE" }),
+    };
+    const posts = await Post.findAll({
+      where: whereClause,
+      attributes: [
+        "post_id",
+        "board_id",
+        "user_id",
+        "author_name",
+        "title",
+        "status",
+        "created_at",
+      ],
+      order: [["created_at", "DESC"]],
+    });
+
+    res.status(200).json({ posts });
+  } catch (err) {
+    console.error("게시글 목록 조회 실패:", err);
+    res.status(500).json({ error: "게시글 목록 조회 중 오류가 발생했습니다." });
+  }
+};
+
+// 게시판 목록 조회
 exports.getBoardList = async (req, res) => {
   res.json({ message: "getBoardList - TODO" });
 };
