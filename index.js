@@ -5,7 +5,7 @@ const { sequelize } = require("./models");
 const PORT = process.env.PORT || 8083;
 
 sequelize
-  .sync({ alter: true })
+  .sync({ alter: false }) // { alter: true }는 개발 중에만 사용, 운영에서는 false로 설정
   .then(() => {
     console.log("DB 연결 성공");
     app.listen(PORT, () => {
