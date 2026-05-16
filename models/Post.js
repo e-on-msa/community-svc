@@ -29,20 +29,16 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: false,
       },
-      created_at: {
-        type: DataTypes.DATE,
+      status: {
+        type: DataTypes.ENUM("ACTIVE", "HIDDEN"),
         allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
+        defaultValue: "ACTIVE",
       },
     },
     {
       tableName: "Post",
       timestamps: true,
+      underscored: true, // created_at, updated_at 스네이크 케이스로 변경
     },
   );
   return Post;
