@@ -21,7 +21,7 @@ exports.isLoggedIn = (req, res, next) => {
 };
 
 exports.isAdmin = (req, res, next) => {
-  if (req.headers["x-user-type"] !== "admin") {
+  if (req.user?.type !== "admin") {
     return res.status(403).json({ message: "관리자 권한이 필요합니다." });
   }
   next();
