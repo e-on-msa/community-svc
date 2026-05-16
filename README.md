@@ -68,7 +68,7 @@ USER_SVC_URL=http://localhost:8082
 npm install
 
 # 2. MySQL에서 DB 생성
-CREATE DATABASE eon_community_db;
+CREATE DATABASE community_db;
 
 # 3. 서버 실행
 npm run dev
@@ -77,8 +77,8 @@ npm run dev
 서버가 정상적으로 실행되면 아래 메시지가 출력됩니다.
 
 ```
-✅ DB 연결 성공
-✅ community-svc listening on :8083
+DB 연결 성공
+community-svc listening on :8083
 ```
 
 
