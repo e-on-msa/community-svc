@@ -39,6 +39,8 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "Post",
       timestamps: true,
       underscored: true, // created_at, updated_at 스네이크 케이스로 변경
+      createdAt: "created_at",
+      updatedAt: "updated_at", // squelize JS 속성 이름도 created_at, updated_at로 변경
     },
   );
   return Post;

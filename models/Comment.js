@@ -25,16 +25,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: false,
       },
-      created_at: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
       parent_comment_id: {
         type: DataTypes.BIGINT,
         allowNull: true, // 대댓글용, 없으면 null
@@ -43,6 +33,9 @@ module.exports = (sequelize, DataTypes) => {
     {
       tableName: "Comment",
       timestamps: true,
+      underscored: true,
+      createdAt: "created_at",
+      updatedAt: "updated_at",
     },
   );
   return Comment;
