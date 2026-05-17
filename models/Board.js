@@ -1,32 +1,36 @@
-'use strict';
+"use strict";
 module.exports = (sequelize, DataTypes) => {
-  const Board = sequelize.define('Board', {
-    board_id: {
-      type: DataTypes.BIGINT,
-      primaryKey: true,
-      autoIncrement: true,
-      allowNull: false,
+  const Board = sequelize.define(
+    "Board",
+    {
+      board_id: {
+        type: DataTypes.BIGINT,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false,
+      },
+      board_name: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+      board_type: {
+        type: DataTypes.STRING(10),
+        allowNull: false,
+      },
+      board_audience: {
+        type: DataTypes.ENUM("student", "parent", "all"),
+        allowNull: false,
+      },
+      created_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     },
-    board_name: {
-      type: DataTypes.STRING(50),
-      allowNull: false,
+    {
+      tableName: "Board",
+      timestamps: false, // updated_at 컬럼이 없으므로 timestamps false로 설정 (딱히 updated_at이 필요없음)
     },
-    board_type: {
-      type: DataTypes.STRING(10),
-      allowNull: false,
-    },
-    board_audience: {
-      type: DataTypes.ENUM('student', 'parent', 'all'),
-      allowNull: false,
-    },
-    created_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-  }, {
-    tableName: 'Board',
-    timestamps: false,
-  });
+  );
   return Board;
 };
