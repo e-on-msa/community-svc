@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { isLoggedIn, isAdmin } = require("../middleware/auth");
+const checkBoardAccess = require("../middleware/checkBoardAccess");
 const upload = require("../middleware/upload");
 const board = require("../controllers/boardController");
 
@@ -16,6 +17,7 @@ router.get("/:board_id/posts", board.getPostList); // 게시글 목록 조회
 router.post(
   "/:board_id/posts",
   isLoggedIn,
+  checkBoardAccess,
   upload.array("images", 5),
   board.createPost,
 );

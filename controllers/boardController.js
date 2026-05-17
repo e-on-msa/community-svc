@@ -64,25 +64,8 @@ exports.getPostList = async (req, res) => {
   const userId = req.headers["x-user-id"];
   const userType = req.headers["x-user-type"];
   try {
-    // 1. 게시판 존재 여부 확인
-    const board = await Board.findByPk(boardId);
-    if (!board) {
-      return res.status(404).json({ error: "게시판을 찾을 수 없습니다." });
-    }
-
-    // 2. 접근 권한 체크
-    if (board.board_audience !== "all") {
-      // 전체 공개 게시판이 아닐 경우
-      if (!userId) {
-        // 로그인하지 않았을 경우
-        return res.status(401).json({ error: "로그인이 필요합니다." });
-      }
-      if (userType !== "admin" && board.board_audience !== userType) {
-        return res.status(403).json({ error: "접근 권한이 없습니다." });
-      }
-    }
-
-    // 3. 게시글 목록 조회
+    // 게시판 존재 여부 + 접근 권한은 checkBoardAccess 미들웨어에서 이미 체크했으므로 여기서는 생략
+    // 게시글 목록 조회
     // admin이면 HIDDEN 포함, 일반 사용자면 ACTIVE만
     const whereClause = {
       board_id: boardId,
