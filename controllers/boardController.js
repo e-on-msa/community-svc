@@ -63,6 +63,12 @@ exports.getPostList = async (req, res) => {
   }
   const userId = req.headers["x-user-id"];
   const userType = req.headers["x-user-type"];
+
+  // 페이징 처리
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const offset = (page - 1) * limit;
+
   try {
     // 게시판 존재 여부 + 접근 권한은 checkBoardAccess 미들웨어에서 이미 체크했으므로 여기서는 생략
     // 게시글 목록 조회
@@ -71,7 +77,7 @@ exports.getPostList = async (req, res) => {
       board_id: boardId,
       ...(userType !== "admin" && { status: "ACTIVE" }),
     };
-    const posts = await Post.findAll({
+    const { count, rows: posts } = await Post.findAndCountAll({
       where: whereClause,
       attributes: [
         "post_id",
@@ -83,9 +89,21 @@ exports.getPostList = async (req, res) => {
         "created_at",
       ],
       order: [["created_at", "DESC"]],
+      limit,
+      offset,
     });
 
-    res.status(200).json({ posts });
+    res
+      .status(200)
+      .json({
+        posts,
+        pagination: {
+          total: count,
+          page,
+          limit,
+          total_pages: Math.ceil(count / limit),
+        },
+      });
   } catch (err) {
     console.error("게시글 목록 조회 실패:", err);
     res.status(500).json({ error: "게시글 목록 조회 중 오류가 발생했습니다." });
