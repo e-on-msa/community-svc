@@ -4,7 +4,7 @@ const path = require("path");
 
 // 게시글 작성
 exports.createPost = async (req, res) => {
-  const { board_id } = req.params;
+  const boardId = Number(req.params.board_id); // URL 파라미터는 문자열이므로 숫자로 변환
   const user_id = req.user.user_id;
   const { title, content } = req.body;
   const files = req.files;
@@ -26,7 +26,7 @@ exports.createPost = async (req, res) => {
       // 게시글 저장
       const post = await Post.create(
         {
-          board_id: Number(board_id), // URL 파라미터는 문자열이므로 숫자로 변환
+          board_id: boardId, // URL 파라미터는 문자열이므로 숫자로 변환
           user_id,
           author_name,
           title,
@@ -57,12 +57,15 @@ exports.createPost = async (req, res) => {
 
 // 게시글 목록 조회
 exports.getPostList = async (req, res) => {
-  const { board_id } = req.params;
+  const boardId = Number(req.params.board_id); // URL 파라미터는 문자열이므로 숫자로 변환
+  if (isNaN(boardId)) {
+    return res.status(400).json({ error: "유효하지 않은 게시판 ID입니다." });
+  }
   const userId = req.headers["x-user-id"];
   const userType = req.headers["x-user-type"];
   try {
     // 1. 게시판 존재 여부 확인
-    const board = await Board.findByPk(Number(board_id));
+    const board = await Board.findByPk(boardId);
     if (!board) {
       return res.status(404).json({ error: "게시판을 찾을 수 없습니다." });
     }
@@ -82,7 +85,7 @@ exports.getPostList = async (req, res) => {
     // 3. 게시글 목록 조회
     // admin이면 HIDDEN 포함, 일반 사용자면 ACTIVE만
     const whereClause = {
-      board_id: Number(board_id), // URL 파라미터는 문자열이므로 숫자로 변환
+      board_id: boardId,
       ...(userType !== "admin" && { status: "ACTIVE" }),
     };
     const posts = await Post.findAll({
