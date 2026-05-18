@@ -119,7 +119,7 @@ exports.getPost = async (req, res) => {
     return res.status(400).json({ error: "유효하지 않은 게시글 ID입니다." });
   }
 
-  const user_type = req.headers["x-user-type"]; // 로그인 여부는 checkBoardAccess 미들웨어에서 이미 체크했으므로 여기서는 user_type만 확인
+  const user_type = req.headers["x-user-type"];
 
   try {
     const post = await Post.findOne({
@@ -177,6 +177,17 @@ exports.getPost = async (req, res) => {
 
     if (!post) {
       return res.status(404).json({ error: "게시글을 찾을 수 없습니다." });
+    }
+
+    // 게시판 접근 권한 체크
+    const board = await Board.findByPk(post.board_id);
+    if (board.board_audience !== "all") {
+      if (!user_id) {
+        return res.status(401).json({ error: "로그인이 필요합니다." });
+      }
+      if (user_type !== "admin" && board.board_audience !== user_type) {
+        return res.status(403).json({ error: "접근 권한이 없습니다." });
+      }
     }
 
     // 이미지 URL 조합
