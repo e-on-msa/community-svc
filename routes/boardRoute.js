@@ -33,5 +33,7 @@ router.post(
   checkBoardAccess,
   board.createComment,
 ); // 댓글 작성
+router.put("/comments/:comment_id", isLoggedIn, board.updateComment); // 댓글 수정
+router.delete("/comments/:comment_id", isLoggedIn, board.deleteComment); // 댓글 삭제
 
 module.exports = router;
