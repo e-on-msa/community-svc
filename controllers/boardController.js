@@ -277,7 +277,7 @@ exports.deletePost = async (req, res) => {
   }
 
   const user_id = req.user.user_id; // 로그인한 사용자 정보는 auth 미들웨어에서 req.user에 담아서 넘겨주도록 되어 있음
-  const user_type = req.headers["x-user-type"];
+  const user_type = req.user.type;
 
   try {
     // 1. 게시글 존재 여부 확인
