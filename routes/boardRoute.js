@@ -20,5 +20,12 @@ router.post(
   upload.array("images", 5),
   board.createPost,
 ); // 게시글 작성
+router.put(
+  "/posts/:post_id",
+  isLoggedIn,
+  upload.array("images", 5),
+  board.updatePost,
+); // 게시글 수정
+router.delete("/posts/:post_id", isLoggedIn, board.deletePost); // 게시글 삭제
 
 module.exports = router;
