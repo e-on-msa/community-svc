@@ -158,17 +158,6 @@ exports.getPost = async (req, res) => {
       return res.status(404).json({ error: "게시글을 찾을 수 없습니다." });
     }
 
-    // 게시판 접근 권한 체크
-    const board = await Board.findByPk(post.board_id);
-    if (board.board_audience !== "all") {
-      if (!user_id) {
-        return res.status(401).json({ error: "로그인이 필요합니다." });
-      }
-      if (user_type !== "admin" && board.board_audience !== user_type) {
-        return res.status(403).json({ error: "접근 권한이 없습니다." });
-      }
-    }
-
     // 댓글 페이징 조회
     const { count, rows: comments } = await Comment.findAndCountAll({
       where: {
