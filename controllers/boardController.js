@@ -132,6 +132,7 @@ exports.getPost = async (req, res) => {
       where: {
         post_id,
         // admin이면 HIDDEN도 조회 가능
+        board_id: Number(req.params.board_id), // 게시글이 해당 게시판 소속인지 확인
         ...(user_type !== "admin" && { status: "ACTIVE" }),
       },
       attributes: [
