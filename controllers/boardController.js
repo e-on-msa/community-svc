@@ -1,11 +1,11 @@
-const { Post, PostImage, Board, sequelize } = require("../models");
+const { Post, PostImage, Board, Comment, sequelize } = require("../models");
 const userClient = require("../services/userClient");
 const path = require("path");
 
 // 게시글 작성
 exports.createPost = async (req, res) => {
-  const boardId = Number(req.params.board_id); // URL 파라미터는 문자열이므로 숫자로 변환
-  const user_id = req.user.user_id;
+  const board_id = Number(req.params.board_id); // URL 파라미터는 문자열이므로 숫자로 변환
+  const user_id = req.user.user_id; // 로그인한 사용자 정보는 auth 미들웨어에서 req.user에 담아서 넘겨주도록 되어 있음
   const { title, content } = req.body;
   const files = req.files;
 
@@ -26,7 +26,7 @@ exports.createPost = async (req, res) => {
       // 게시글 저장
       const post = await Post.create(
         {
-          board_id: boardId, // URL 파라미터는 문자열이므로 숫자로 변환
+          board_id: board_id, // URL 파라미터는 문자열이므로 숫자로 변환
           user_id,
           author_name,
           title,
@@ -57,12 +57,11 @@ exports.createPost = async (req, res) => {
 
 // 게시글 목록 조회
 exports.getPostList = async (req, res) => {
-  const boardId = Number(req.params.board_id); // URL 파라미터는 문자열이므로 숫자로 변환
-  if (isNaN(boardId)) {
+  const board_id = Number(req.params.board_id); // URL 파라미터는 문자열이므로 숫자로 변환
+  if (isNaN(board_id)) {
     return res.status(400).json({ error: "유효하지 않은 게시판 ID입니다." });
   }
-  const userId = req.headers["x-user-id"];
-  const userType = req.headers["x-user-type"];
+  const user_type = req.headers["x-user-type"]; // 로그인 여부는 checkBoardAccess 미들웨어에서 이미 체크했으므로 여기서는 user_type만 확인
 
   // 페이징 처리
   const page = Number(req.query.page) || 1;
@@ -74,8 +73,8 @@ exports.getPostList = async (req, res) => {
     // 게시글 목록 조회
     // admin이면 HIDDEN 포함, 일반 사용자면 ACTIVE만
     const whereClause = {
-      board_id: boardId,
-      ...(userType !== "admin" && { status: "ACTIVE" }),
+      board_id: board_id,
+      ...(user_type !== "admin" && { status: "ACTIVE" }),
     };
     const { count, rows: posts } = await Post.findAndCountAll({
       where: whereClause,
@@ -93,24 +92,118 @@ exports.getPostList = async (req, res) => {
       offset,
     });
 
-    res
-      .status(200)
-      .json({
-        posts,
-        pagination: {
-          total: count,
-          page,
-          limit,
-          total_pages: Math.ceil(count / limit),
-        },
-      });
+    res.status(200).json({
+      posts,
+      pagination: {
+        total: count,
+        page,
+        limit,
+        total_pages: Math.ceil(count / limit),
+      },
+    });
   } catch (err) {
     console.error("게시글 목록 조회 실패:", err);
     res.status(500).json({ error: "게시글 목록 조회 중 오류가 발생했습니다." });
   }
 };
 
-// 게시판 목록 조회
+// TODO: 게시판 목록 조회
 exports.getBoardList = async (req, res) => {
   res.json({ message: "getBoardList - TODO" });
+};
+
+// 게시글 상세 조회 (댓글 목록 포함)
+exports.getPost = async (req, res) => {
+  const post_id = Number(req.params.post_id);
+  if (isNaN(post_id)) {
+    return res.status(400).json({ error: "유효하지 않은 게시글 ID입니다." });
+  }
+
+  const user_type = req.headers["x-user-type"]; // 로그인 여부는 checkBoardAccess 미들웨어에서 이미 체크했으므로 여기서는 user_type만 확인
+
+  try {
+    const post = await Post.findOne({
+      where: {
+        post_id,
+        board_id: Number(req.params.board_id),
+        // admin이면 HIDDEN도 조회 가능
+        ...(user_type !== "admin" && { status: "ACTIVE" }),
+      },
+      attributes: [
+        "post_id",
+        "board_id",
+        "user_id",
+        "author_name",
+        "title",
+        "content",
+        "status",
+        "created_at",
+        "updated_at",
+      ],
+      include: [
+        {
+          model: PostImage,
+          as: "images",
+          attributes: ["image_id", "image_url"],
+        },
+        {
+          model: Comment,
+          where: { parent_comment_id: null }, // 최상위 댓글만
+          required: false, // 댓글 없어도 게시글 반환
+          attributes: [
+            "comment_id",
+            "user_id",
+            "author_name",
+            "content",
+            "parent_comment_id",
+            "created_at",
+          ],
+          include: [
+            {
+              model: Comment,
+              as: "Replies",
+              attributes: [
+                "comment_id",
+                "user_id",
+                "author_name",
+                "content",
+                "parent_comment_id",
+                "created_at",
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!post) {
+      return res.status(404).json({ error: "게시글을 찾을 수 없습니다." });
+    }
+
+    // 이미지 URL 조합
+    const host = `${req.protocol}://${req.get("host")}`;
+    const images = post.images.map((img) => ({
+      image_id: img.image_id,
+      image_url: `${host}/uploads/${img.image_url}`,
+    }));
+
+    res.status(200).json({
+      post: {
+        post_id: post.post_id,
+        board_id: post.board_id,
+        user_id: post.user_id,
+        author_name: post.author_name,
+        title: post.title,
+        content: post.content,
+        status: post.status,
+        created_at: post.created_at,
+        updated_at: post.updated_at,
+        images,
+        comments: post.Comments,
+      },
+    });
+  } catch (err) {
+    console.error("게시글 상세 조회 실패:", err);
+    res.status(500).json({ error: "게시글 상세 조회 중 오류가 발생했습니다." });
+  }
 };

@@ -9,9 +9,8 @@ const board = require("../controllers/boardController");
 
 // ── 읽기 (비로그인 허용) ──────────────
 router.get("/", board.getBoardList); // 게시판 목록 조회
-router.get("/:board_id/posts", board.getPostList); // 게시글 목록 조회
-
-// TODO: 나머지 라우트 추가
+router.get("/:board_id/posts", checkBoardAccess, board.getPostList); // 게시글 목록 조회
+router.get("/:board_id/posts/:post_id", checkBoardAccess, board.getPost); // 게시글 상세 조회 (댓글 목록 포함)
 
 // ── 쓰기 (로그인 필요) ────────────────
 router.post(
@@ -20,6 +19,6 @@ router.post(
   checkBoardAccess,
   upload.array("images", 5),
   board.createPost,
-);
+); // 게시글 작성
 
 module.exports = router;

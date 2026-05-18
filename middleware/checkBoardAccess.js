@@ -2,8 +2,8 @@ const { Board } = require("../models");
 
 module.exports = async (req, res, next) => {
   const board_id = Number(req.params.board_id);
-  const userId = req.headers["x-user-id"];
-  const userType = req.headers["x-user-type"];
+  const user_id = req.headers["x-user-id"];
+  const user_type = req.headers["x-user-type"];
 
   try {
     // 1. 게시판 존재 여부 확인
@@ -14,10 +14,10 @@ module.exports = async (req, res, next) => {
 
     // 2. 접근 권한 체크
     if (board.board_audience !== "all") {
-      if (!userId) {
+      if (!user_id) {
         return res.status(401).json({ error: "로그인이 필요합니다." });
       }
-      if (userType !== "admin" && board.board_audience !== userType) {
+      if (user_type !== "admin" && board.board_audience !== user_type) {
         return res.status(403).json({ error: "접근 권한이 없습니다." });
       }
     }
