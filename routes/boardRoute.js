@@ -10,7 +10,7 @@ const board = require("../controllers/boardController");
 // ── 읽기 (비로그인 허용) ──────────────
 router.get("/", board.getBoardList); // 게시판 목록 조회
 router.get("/:board_id/posts", checkBoardAccess, board.getPostList); // 게시글 목록 조회
-router.get("/:board_id/posts/:post_id", checkBoardAccess, board.getPost); // 게시글 상세 조회 (댓글 목록 포함)
+router.get("/posts/:post_id", board.getPost); // 게시글 상세 조회 (댓글 목록 포함)
 
 // ── 쓰기 (로그인 필요) ────────────────
 router.post(
