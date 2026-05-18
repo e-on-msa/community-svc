@@ -602,14 +602,20 @@ exports.updateBoardRequestStatus = async (req, res) => {
         .json({ error: "게시판 개설 신청을 찾을 수 없습니다." });
     }
 
-    // 2. 이미 처리된 신청인지 확인
-    if (boardRequest.request_status !== "pending") {
-      return res.status(400).json({ error: "이미 처리된 신청입니다." });
-    }
-
     if (request_status === "approved") {
-      // 3. 승인 시 트랜잭션으로 게시판 생성 + 신청 업데이트
+      // 2. 승인 시 트랜잭션으로 게시판 생성 + 신청 업데이트
       await sequelize.transaction(async (t) => {
+        // 트랜잭션 내부에서 lock 걸고 다시 조회
+        const lockedRequest = await BoardRequest.findByPk(request_id, {
+          lock: t.LOCK.UPDATE,
+          transaction: t,
+        });
+
+        // 트랜잭션 내부에서 pending 여부 재확인
+        if (lockedRequest.request_status !== "pending") {
+          throw new Error("ALREADY_PROCESSED");
+        }
+
         // 게시판 생성
         const newBoard = await Board.create(
           {
@@ -627,17 +633,32 @@ exports.updateBoardRequestStatus = async (req, res) => {
         );
       });
     } else {
-      // 4. 거절 시 상태만 변경
-      await BoardRequest.update(
-        { request_status: "rejected" },
-        { where: { request_id } },
-      );
+      // 3. 거절 시 트랜잭션으로 처리
+      await sequelize.transaction(async (t) => {
+        const lockedRequest = await BoardRequest.findByPk(request_id, {
+          lock: t.LOCK.UPDATE,
+          transaction: t,
+        });
+
+        if (lockedRequest.request_status !== "pending") {
+          throw new Error("ALREADY_PROCESSED");
+        }
+
+        await BoardRequest.update(
+          { request_status: "rejected" },
+          { where: { request_id }, transaction: t },
+        );
+      });
     }
 
     res.status(200).json({
       message: `게시판 개설 신청이 ${request_status === "approved" ? "승인" : "거절"}되었습니다.`,
     });
   } catch (err) {
+    if (err.message === "ALREADY_PROCESSED") {
+      return res.status(400).json({ error: "이미 처리된 신청입니다." });
+    }
+
     console.error("게시판 개설 승인/거절 실패:", err);
     res
       .status(500)
