@@ -36,4 +36,7 @@ router.post(
 router.put("/comments/:comment_id", isLoggedIn, board.updateComment); // 댓글 수정
 router.delete("/comments/:comment_id", isLoggedIn, board.deleteComment); // 댓글 삭제
 
+// ── 게시판 개설 신청 (로그인 필요) ────
+router.post("/board-requests", isLoggedIn, board.createBoardRequest); // 게시판 개설 신청
+
 module.exports = router;
