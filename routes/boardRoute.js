@@ -21,5 +21,6 @@ router.post(
   upload.array("images", 5),
   board.createPost,
 );
+router.get("/:board_id/posts/:post_id", checkBoardAccess, board.getPost);
 
 module.exports = router;

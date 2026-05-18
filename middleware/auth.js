@@ -1,19 +1,19 @@
 // Gateway 헤더 기반 인증
 exports.isLoggedIn = (req, res, next) => {
-  const rawId = req.headers["x-user-id"];
+  const raw_user_id = req.headers["x-user-id"];
 
-  if (!rawId) {
+  if (!raw_user_id) {
     return res.status(401).json({ message: "로그인이 필요합니다." });
   }
 
-  const userId = Number(rawId);
+  const user_id = Number(raw_user_id);
 
-  if (isNaN(userId)) {
+  if (isNaN(user_id)) {
     return res.status(401).json({ message: "유효하지 않은 사용자 ID입니다." });
   }
 
   req.user = {
-    user_id: userId,
+    user_id: user_id,
     type: req.headers["x-user-type"],
   };
 
