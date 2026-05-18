@@ -546,11 +546,26 @@ exports.createBoardRequest = async (req, res) => {
 // 게시판 개설 신청 목록 조회 (관리자)
 exports.getBoardRequestList = async (req, res) => {
   try {
-    const requests = await BoardRequest.findAll({
+    // 페이징 처리
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: requests } = await BoardRequest.findAndCountAll({
       order: [["request_date", "DESC"]],
+      limit,
+      offset,
     });
 
-    res.status(200).json({ board_requests: requests });
+    res.status(200).json({
+      board_requests: requests,
+      pagination: {
+        total: count,
+        page,
+        limit,
+        total_pages: Math.ceil(count / limit),
+      },
+    });
   } catch (err) {
     console.error("게시판 개설 신청 목록 조회 실패:", err);
     res
