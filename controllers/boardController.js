@@ -494,7 +494,12 @@ exports.createBoardRequest = async (req, res) => {
     request_reason,
   } = req.body;
 
-  if (!requested_board_name || !requested_board_type || !board_audience || !request_reason) {
+  if (
+    !requested_board_name ||
+    !requested_board_type ||
+    !board_audience ||
+    !request_reason
+  ) {
     return res.status(400).json({
       error:
         "requested_board_name, requested_board_type, board_audience, request_reason은 필수입니다.",
@@ -535,5 +540,21 @@ exports.createBoardRequest = async (req, res) => {
   } catch (err) {
     console.error("게시판 개설 신청 실패:", err);
     res.status(500).json({ error: "게시판 개설 신청 중 오류가 발생했습니다." });
+  }
+};
+
+// 게시판 개설 신청 목록 조회 (관리자)
+exports.getBoardRequestList = async (req, res) => {
+  try {
+    const requests = await BoardRequest.findAll({
+      order: [["request_date", "DESC"]],
+    });
+
+    res.status(200).json({ board_requests: requests });
+  } catch (err) {
+    console.error("게시판 개설 신청 목록 조회 실패:", err);
+    res
+      .status(500)
+      .json({ error: "게시판 개설 신청 목록 조회 중 오류가 발생했습니다." });
   }
 };
