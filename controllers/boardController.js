@@ -627,9 +627,9 @@ exports.updateBoardRequestStatus = async (req, res) => {
         );
 
         // 신청 상태 업데이트 + board_id 연결
-        await BoardRequest.update(
+        await boardRequest.update(
           { request_status: "approved", board_id: newBoard.board_id },
-          { where: { request_id }, transaction: t },
+          { transaction: t },
         );
       });
     } else {
@@ -644,9 +644,9 @@ exports.updateBoardRequestStatus = async (req, res) => {
           throw new Error("ALREADY_PROCESSED");
         }
 
-        await BoardRequest.update(
-          { request_status: "rejected" },
-          { where: { request_id }, transaction: t },
+        await boardRequest.update(
+          { request_status: "rejected", board_id: newBoard.board_id },
+          { transaction: t },
         );
       });
     }
