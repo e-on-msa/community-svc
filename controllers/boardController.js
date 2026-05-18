@@ -148,6 +148,8 @@ exports.getPost = async (req, res) => {
         },
         {
           model: Comment,
+          where: { parent_comment_id: null }, // 최상위 댓글만
+          required: false, // 댓글 없어도 게시글 반환
           attributes: [
             "comment_id",
             "user_id",
