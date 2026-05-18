@@ -394,3 +394,72 @@ exports.createComment = async (req, res) => {
     res.status(500).json({ error: "댓글 작성 중 오류가 발생했습니다." });
   }
 };
+
+// 댓글 수정
+exports.updateComment = async (req, res) => {
+  const comment_id = Number(req.params.comment_id);
+  if (isNaN(comment_id)) {
+    return res.status(400).json({ error: "유효하지 않은 댓글 ID입니다." });
+  }
+
+  const user_id = req.user.user_id;
+  const user_type = req.user.type;
+  const { content } = req.body;
+
+  if (!content) {
+    return res.status(400).json({ error: "content는 필수입니다." });
+  }
+
+  try {
+    // 1. 댓글 존재 여부 확인
+    const comment = await Comment.findByPk(comment_id);
+    if (!comment) {
+      return res.status(404).json({ error: "댓글을 찾을 수 없습니다." });
+    }
+
+    // 2. 권한 체크 (본인 또는 관리자)
+    if (comment.user_id !== user_id && user_type !== "admin") {
+      return res.status(403).json({ error: "수정 권한이 없습니다." });
+    }
+
+    // 3. 댓글 수정
+    await Comment.update({ content }, { where: { comment_id } });
+
+    res.status(200).json({ message: "댓글이 수정되었습니다." });
+  } catch (err) {
+    console.error("댓글 수정 실패:", err);
+    res.status(500).json({ error: "댓글 수정 중 오류가 발생했습니다." });
+  }
+};
+
+// 댓글 삭제
+exports.deleteComment = async (req, res) => {
+  const comment_id = Number(req.params.comment_id);
+  if (isNaN(comment_id)) {
+    return res.status(400).json({ error: "유효하지 않은 댓글 ID입니다." });
+  }
+
+  const user_id = req.user.user_id;
+  const user_type = req.user.type;
+
+  try {
+    // 1. 댓글 존재 여부 확인
+    const comment = await Comment.findByPk(comment_id);
+    if (!comment) {
+      return res.status(404).json({ error: "댓글을 찾을 수 없습니다." });
+    }
+
+    // 2. 권한 체크 (본인 또는 관리자)
+    if (comment.user_id !== user_id && user_type !== "admin") {
+      return res.status(403).json({ error: "삭제 권한이 없습니다." });
+    }
+
+    // 3. 댓글 삭제 (대댓글은 CASCADE로 자동 삭제)
+    await Comment.destroy({ where: { comment_id } });
+
+    res.status(200).json({ message: "댓글이 삭제되었습니다." });
+  } catch (err) {
+    console.error("댓글 삭제 실패:", err);
+    res.status(500).json({ error: "댓글 삭제 중 오류가 발생했습니다." });
+  }
+};
