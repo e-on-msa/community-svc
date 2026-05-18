@@ -207,3 +207,96 @@ exports.getPost = async (req, res) => {
     res.status(500).json({ error: "게시글 상세 조회 중 오류가 발생했습니다." });
   }
 };
+
+// 게시글 수정
+exports.updatePost = async (req, res) => {
+  const post_id = Number(req.params.post_id);
+  if (isNaN(post_id)) {
+    return res.status(400).json({ error: "유효하지 않은 게시글 ID입니다." });
+  }
+
+  const user_id = req.user.user_id; // 로그인한 사용자 정보는 auth 미들웨어에서 req.user에 담아서 넘겨주도록 되어 있음
+  const user_type = req.user.type;
+  const { title, content, removed_image_ids } = req.body;
+  const files = req.files;
+
+  if (!title || !content) {
+    return res.status(400).json({ error: "title, content는 필수입니다." });
+  }
+
+  try {
+    // 1. 게시글 존재 여부 확인
+    const post = await Post.findByPk(post_id);
+    if (!post) {
+      return res.status(404).json({ error: "게시글을 찾을 수 없습니다." });
+    }
+
+    // 2. 권한 체크 (본인 또는 관리자)
+    if (post.user_id !== user_id && user_type !== "admin") {
+      return res.status(403).json({ error: "수정 권한이 없습니다." });
+    }
+
+    // 3. 수정 + 이미지 처리 (트랜잭션)
+    await sequelize.transaction(async (t) => {
+      // 게시글 수정
+      await Post.update(
+        { title, content },
+        { where: { post_id }, transaction: t },
+      );
+
+      // 이미지 삭제
+      if (removed_image_ids?.length) {
+        await PostImage.destroy({
+          where: { image_id: removed_image_ids, post_id: post_id },
+          transaction: t,
+        });
+      }
+
+      // 이미지 추가
+      if (files?.length) {
+        const bulk = files.map((f) => ({
+          post_id,
+          image_url: f.filename,
+        }));
+        await PostImage.bulkCreate(bulk, { transaction: t });
+      }
+    });
+
+    res.status(200).json({ message: "게시글이 수정되었습니다." });
+  } catch (err) {
+    console.error("게시글 수정 실패:", err);
+    res.status(500).json({ error: "게시글 수정 중 오류가 발생했습니다." });
+  }
+};
+
+// 게시글 삭제
+exports.deletePost = async (req, res) => {
+  const post_id = Number(req.params.post_id);
+  if (isNaN(post_id)) {
+    return res.status(400).json({ error: "유효하지 않은 게시글 ID입니다." });
+  }
+
+  const user_id = req.user.user_id; // 로그인한 사용자 정보는 auth 미들웨어에서 req.user에 담아서 넘겨주도록 되어 있음
+  const user_type = req.user.type;
+
+  try {
+    // 1. 게시글 존재 여부 확인
+    const post = await Post.findByPk(post_id);
+    if (!post) {
+      return res.status(404).json({ error: "게시글을 찾을 수 없습니다." });
+    }
+
+    // 2. 권한 체크 (본인 또는 관리자)
+    if (post.user_id !== user_id && user_type !== "admin") {
+      return res.status(403).json({ error: "삭제 권한이 없습니다." });
+    }
+
+    // 3. 게시글 삭제 (PostImage는 CASCADE로 자동 삭제)
+    await Post.destroy({ where: { post_id } });
+
+    res.status(200).json({ message: "게시글이 삭제되었습니다." });
+  } catch (err) {
+    console.error("게시글 삭제 실패:", err);
+    res.status(500).json({ error: "게시글 삭제 중 오류가 발생했습니다." });
+  }
+};
