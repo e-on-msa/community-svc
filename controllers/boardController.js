@@ -494,10 +494,10 @@ exports.createBoardRequest = async (req, res) => {
     request_reason,
   } = req.body;
 
-  if (!requested_board_name || !requested_board_type || !board_audience) {
+  if (!requested_board_name || !requested_board_type || !board_audience || !request_reason) {
     return res.status(400).json({
       error:
-        "requested_board_name, requested_board_type, board_audience는 필수입니다.",
+        "requested_board_name, requested_board_type, board_audience, request_reason은 필수입니다.",
     });
   }
 
