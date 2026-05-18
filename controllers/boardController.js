@@ -247,7 +247,7 @@ exports.updatePost = async (req, res) => {
       // 이미지 삭제
       if (removed_image_ids?.length) {
         await PostImage.destroy({
-          where: { image_id: removed_image_ids },
+          where: { image_id: removed_image_ids, post_id: post_id },
           transaction: t,
         });
       }
