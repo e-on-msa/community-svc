@@ -1,4 +1,11 @@
-const { Post, PostImage, Board, Comment, sequelize } = require("../models");
+const {
+  Post,
+  PostImage,
+  Board,
+  BoardRequest,
+  Comment,
+  sequelize,
+} = require("../models");
 const userClient = require("../services/userClient");
 const path = require("path");
 
@@ -474,5 +481,59 @@ exports.deleteComment = async (req, res) => {
   } catch (err) {
     console.error("댓글 삭제 실패:", err);
     res.status(500).json({ error: "댓글 삭제 중 오류가 발생했습니다." });
+  }
+};
+
+// 게시판 개설 신청
+exports.createBoardRequest = async (req, res) => {
+  const user_id = req.user.user_id;
+  const {
+    requested_board_name,
+    requested_board_type,
+    board_audience,
+    request_reason,
+  } = req.body;
+
+  if (!requested_board_name || !requested_board_type || !board_audience || !request_reason) {
+    return res.status(400).json({
+      error:
+        "requested_board_name, requested_board_type, board_audience, request_reason은 필수입니다.",
+    });
+  }
+
+  // board_audience 유효성 검사
+  if (!["student", "parent", "all"].includes(board_audience)) {
+    return res.status(400).json({
+      error: "board_audience는 student, parent, all 중 하나여야 합니다.",
+    });
+  }
+
+  // 신청자 타입과 board_audience 일치 여부 확인
+  const user_type = req.user.type;
+  if (
+    user_type !== "admin" &&
+    board_audience !== "all" &&
+    board_audience !== user_type
+  ) {
+    return res
+      .status(403)
+      .json({ error: "해당 게시판 유형은 신청할 수 없습니다." });
+  }
+
+  try {
+    const newRequest = await BoardRequest.create({
+      user_id,
+      requested_board_name,
+      requested_board_type,
+      board_audience,
+      request_reason,
+    });
+
+    res.status(201).json({
+      board_request: newRequest,
+    });
+  } catch (err) {
+    console.error("게시판 개설 신청 실패:", err);
+    res.status(500).json({ error: "게시판 개설 신청 중 오류가 발생했습니다." });
   }
 };

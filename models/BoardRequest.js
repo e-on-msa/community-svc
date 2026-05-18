@@ -31,7 +31,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       request_reason: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: false,
       },
       request_date: {
         type: DataTypes.DATE,
