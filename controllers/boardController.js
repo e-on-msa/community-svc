@@ -123,8 +123,8 @@ exports.getPost = async (req, res) => {
   const user_type = req.headers["x-user-type"];
 
   // 댓글 페이징
-  const comment_page = Number(req.query.comment_page) || 1;
-  const comment_limit = Number(req.query.comment_limit) || 10;
+  const comment_page = Math.max(1, Number(req.query.comment_page) || 1);
+  const comment_limit = Math.max(1, Number(req.query.comment_limit) || 10);
   const comment_offset = (comment_page - 1) * comment_limit;
 
   try {
