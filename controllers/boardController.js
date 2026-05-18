@@ -526,22 +526,11 @@ exports.createBoardRequest = async (req, res) => {
       requested_board_name,
       requested_board_type,
       board_audience,
-      request_reason: request_reason,
-      request_date: new Date(), // 생성 시점으로 설정
-      request_status: "pending",
+      request_reason,
     });
 
     res.status(201).json({
-      board_request: {
-        request_id: newRequest.request_id,
-        user_id: newRequest.user_id,
-        requested_board_name: newRequest.requested_board_name,
-        requested_board_type: newRequest.requested_board_type,
-        board_audience: newRequest.board_audience,
-        request_reason: newRequest.request_reason,
-        request_date: newRequest.request_date,
-        request_status: newRequest.request_status,
-      },
+      board_request: newRequest,
     });
   } catch (err) {
     console.error("게시판 개설 신청 실패:", err);
