@@ -188,6 +188,10 @@ exports.getPost = async (req, res) => {
         {
           model: Comment,
           as: "Replies",
+          where: {
+            ...(user_type !== "admin" && { status: "ACTIVE" }),
+          },
+          required: false, // 대댓글이 없어도 최상위 댓글은 나오도록
           attributes: [
             "comment_id",
             "user_id",
