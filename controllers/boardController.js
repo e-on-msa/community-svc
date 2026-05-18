@@ -332,6 +332,13 @@ exports.createComment = async (req, res) => {
       return res.status(404).json({ error: "게시글을 찾을 수 없습니다." });
     }
 
+    // 게시글이 해당 게시판 소속인지 확인
+    if (post.board_id !== Number(req.params.board_id)) {
+      return res
+        .status(400)
+        .json({ error: "해당 게시판의 게시글이 아닙니다." });
+    }
+
     // 게시글이 숨김 상태면 댓글 작성 불가
     if (post.status === "HIDDEN") {
       return res
