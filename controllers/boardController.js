@@ -132,6 +132,7 @@ exports.getPost = async (req, res) => {
       where: {
         post_id,
         // admin이면 HIDDEN도 조회 가능
+        board_id: Number(req.params.board_id), // 게시글이 해당 게시판 소속인지 확인
         ...(user_type !== "admin" && { status: "ACTIVE" }),
       },
       attributes: [
@@ -156,17 +157,6 @@ exports.getPost = async (req, res) => {
 
     if (!post) {
       return res.status(404).json({ error: "게시글을 찾을 수 없습니다." });
-    }
-
-    // 게시판 접근 권한 체크
-    const board = await Board.findByPk(post.board_id);
-    if (board.board_audience !== "all") {
-      if (!user_id) {
-        return res.status(401).json({ error: "로그인이 필요합니다." });
-      }
-      if (user_type !== "admin" && board.board_audience !== user_type) {
-        return res.status(403).json({ error: "접근 권한이 없습니다." });
-      }
     }
 
     // 댓글 페이징 조회
