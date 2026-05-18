@@ -27,5 +27,11 @@ router.put(
   board.updatePost,
 ); // 게시글 수정
 router.delete("/posts/:post_id", isLoggedIn, board.deletePost); // 게시글 삭제
+router.post(
+  "/:board_id/posts/:post_id/comments",
+  isLoggedIn,
+  checkBoardAccess,
+  board.createComment,
+); // 댓글 작성
 
 module.exports = router;

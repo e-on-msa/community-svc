@@ -310,3 +310,87 @@ exports.deletePost = async (req, res) => {
     res.status(500).json({ error: "게시글 삭제 중 오류가 발생했습니다." });
   }
 };
+
+// 댓글 작성
+exports.createComment = async (req, res) => {
+  const post_id = Number(req.params.post_id);
+  if (isNaN(post_id)) {
+    return res.status(400).json({ error: "유효하지 않은 게시글 ID입니다." });
+  }
+
+  const user_id = req.user.user_id;
+  const { content, parent_comment_id } = req.body;
+
+  if (!content) {
+    return res.status(400).json({ error: "content는 필수입니다." });
+  }
+
+  try {
+    // 1. 게시글 존재 여부 확인
+    const post = await Post.findByPk(post_id);
+    if (!post) {
+      return res.status(404).json({ error: "게시글을 찾을 수 없습니다." });
+    }
+
+    // 게시글이 해당 게시판 소속인지 확인
+    if (post.board_id !== Number(req.params.board_id)) {
+      return res
+        .status(400)
+        .json({ error: "해당 게시판의 게시글이 아닙니다." });
+    }
+
+    // 게시글이 숨김 상태면 댓글 작성 불가
+    if (post.status === "HIDDEN") {
+      return res
+        .status(403)
+        .json({ error: "숨김 처리된 게시글에는 댓글을 작성할 수 없습니다." });
+    }
+
+    // 2. 대댓글인 경우 부모 댓글 존재 여부 확인
+    if (parent_comment_id) {
+      const parentComment = await Comment.findByPk(parent_comment_id);
+      if (!parentComment) {
+        return res.status(404).json({ error: "부모 댓글을 찾을 수 없습니다." });
+      }
+      // 부모 댓글이 같은 게시글의 댓글인지 확인
+      if (parentComment.post_id !== post_id) {
+        return res
+          .status(400)
+          .json({ error: "부모 댓글이 해당 게시글의 댓글이 아닙니다." });
+      }
+    }
+
+    // 3. user-svc에서 author_name 조회
+    const user = await userClient.getUserById(user_id);
+    if (!user) {
+      return res.status(404).json({ error: "사용자 정보를 찾을 수 없습니다." });
+    }
+    const author_name = user.name;
+
+    // 4. 댓글 저장
+    const newComment = await Comment.create({
+      post_id,
+      user_id,
+      author_name,
+      content,
+      parent_comment_id: parent_comment_id || null,
+    });
+
+    res.status(201).json({
+      comment: {
+        comment_id: newComment.comment_id,
+        post_id: newComment.post_id,
+        user_id: newComment.user_id,
+        author_name: newComment.author_name,
+        content: newComment.content,
+        parent_comment_id: newComment.parent_comment_id,
+        status: newComment.status,
+        created_at: newComment.created_at,
+        updated_at: newComment.updated_at,
+      },
+    });
+  } catch (err) {
+    console.error("댓글 작성 실패:", err);
+    res.status(500).json({ error: "댓글 작성 중 오류가 발생했습니다." });
+  }
+};

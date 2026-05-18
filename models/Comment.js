@@ -29,6 +29,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BIGINT,
         allowNull: true, // 대댓글용, 없으면 null
       },
+      status: {
+        type: DataTypes.ENUM("ACTIVE", "HIDDEN"),
+        allowNull: false,
+        defaultValue: "ACTIVE",
+      },
     },
     {
       tableName: "Comment",
