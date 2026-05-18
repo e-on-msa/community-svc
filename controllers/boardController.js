@@ -645,7 +645,7 @@ exports.updateBoardRequestStatus = async (req, res) => {
         }
 
         await boardRequest.update(
-          { request_status: "rejected", board_id: newBoard.board_id },
+          { request_status: "rejected" },
           { transaction: t },
         );
       });
