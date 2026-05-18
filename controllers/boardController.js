@@ -119,7 +119,13 @@ exports.getPost = async (req, res) => {
     return res.status(400).json({ error: "유효하지 않은 게시글 ID입니다." });
   }
 
+  const user_id = req.headers["x-user-id"];
   const user_type = req.headers["x-user-type"];
+
+  // 댓글 페이징
+  const comment_page = Math.max(1, Number(req.query.comment_page) || 1);
+  const comment_limit = Math.max(1, Number(req.query.comment_limit) || 10);
+  const comment_offset = (comment_page - 1) * comment_limit;
 
   try {
     const post = await Post.findOne({
@@ -145,33 +151,6 @@ exports.getPost = async (req, res) => {
           as: "images",
           attributes: ["image_id", "image_url"],
         },
-        {
-          model: Comment,
-          where: { parent_comment_id: null }, // 최상위 댓글만
-          required: false, // 댓글 없어도 게시글 반환
-          attributes: [
-            "comment_id",
-            "user_id",
-            "author_name",
-            "content",
-            "parent_comment_id",
-            "created_at",
-          ],
-          include: [
-            {
-              model: Comment,
-              as: "Replies",
-              attributes: [
-                "comment_id",
-                "user_id",
-                "author_name",
-                "content",
-                "parent_comment_id",
-                "created_at",
-              ],
-            },
-          ],
-        },
       ],
     });
 
@@ -189,6 +168,44 @@ exports.getPost = async (req, res) => {
         return res.status(403).json({ error: "접근 권한이 없습니다." });
       }
     }
+
+    // 댓글 페이징 조회
+    const { count, rows: comments } = await Comment.findAndCountAll({
+      where: {
+        post_id,
+        parent_comment_id: null, // 최상위 댓글만
+        ...(user_type !== "admin" && { status: "ACTIVE" }),
+      },
+      attributes: [
+        "comment_id",
+        "user_id",
+        "author_name",
+        "content",
+        "parent_comment_id",
+        "created_at",
+      ],
+      include: [
+        {
+          model: Comment,
+          as: "Replies",
+          where: {
+            ...(user_type !== "admin" && { status: "ACTIVE" }),
+          },
+          required: false, // 대댓글이 없어도 최상위 댓글은 나오도록
+          attributes: [
+            "comment_id",
+            "user_id",
+            "author_name",
+            "content",
+            "parent_comment_id",
+            "created_at",
+          ],
+        },
+      ],
+      order: [["created_at", "ASC"]],
+      limit: comment_limit,
+      offset: comment_offset,
+    });
 
     // 이미지 URL 조합
     const host = `${req.protocol}://${req.get("host")}`;
@@ -209,7 +226,13 @@ exports.getPost = async (req, res) => {
         created_at: post.created_at,
         updated_at: post.updated_at,
         images,
-        comments: post.Comments,
+        comments,
+        comment_pagination: {
+          total: count,
+          page: comment_page,
+          limit: comment_limit,
+          total_pages: Math.ceil(count / comment_limit),
+        },
       },
     });
   } catch (err) {
