@@ -345,13 +345,12 @@ exports.createComment = async (req, res) => {
       if (!parentComment) {
         return res.status(404).json({ error: "부모 댓글을 찾을 수 없습니다." });
       }
-    }
-
-    // 부모 댓글이 같은 게시글의 댓글인지 확인
-    if (parentComment.post_id !== post_id) {
-      return res
-        .status(400)
-        .json({ error: "부모 댓글이 해당 게시글의 댓글이 아닙니다." });
+      // 부모 댓글이 같은 게시글의 댓글인지 확인
+      if (parentComment.post_id !== post_id) {
+        return res
+          .status(400)
+          .json({ error: "부모 댓글이 해당 게시글의 댓글이 아닙니다." });
+      }
     }
 
     // 3. user-svc에서 author_name 조회
