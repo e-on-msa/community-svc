@@ -125,6 +125,7 @@ exports.getPost = async (req, res) => {
     const post = await Post.findOne({
       where: {
         post_id,
+        board_id: Number(req.params.board_id),
         // admin이면 HIDDEN도 조회 가능
         ...(user_type !== "admin" && { status: "ACTIVE" }),
       },
