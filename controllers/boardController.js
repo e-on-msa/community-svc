@@ -543,7 +543,7 @@ exports.createBoardRequest = async (req, res) => {
   }
 };
 
-// 게시판 개설 신청 목록 조회 (관리자)
+// 게시판 개설 신청 목록 조회 (관리자 전용)
 exports.getBoardRequestList = async (req, res) => {
   try {
     // 페이징 처리
@@ -571,5 +571,76 @@ exports.getBoardRequestList = async (req, res) => {
     res
       .status(500)
       .json({ error: "게시판 개설 신청 목록 조회 중 오류가 발생했습니다." });
+  }
+};
+
+// 게시판 개설 승인/거절 (관리자 전용)
+exports.updateBoardRequestStatus = async (req, res) => {
+  const request_id = Number(req.params.request_id);
+  if (isNaN(request_id)) {
+    return res.status(400).json({ error: "유효하지 않은 신청 ID입니다." });
+  }
+
+  const { request_status } = req.body;
+
+  if (!request_status) {
+    return res.status(400).json({ error: "request_status는 필수입니다." });
+  }
+
+  if (!["approved", "rejected"].includes(request_status)) {
+    return res
+      .status(400)
+      .json({ error: "request_status는 approved 또는 rejected여야 합니다." });
+  }
+
+  try {
+    // 1. 신청 존재 여부 확인
+    const boardRequest = await BoardRequest.findByPk(request_id);
+    if (!boardRequest) {
+      return res
+        .status(404)
+        .json({ error: "게시판 개설 신청을 찾을 수 없습니다." });
+    }
+
+    // 2. 이미 처리된 신청인지 확인
+    if (boardRequest.request_status !== "pending") {
+      return res.status(400).json({ error: "이미 처리된 신청입니다." });
+    }
+
+    if (request_status === "approved") {
+      // 3. 승인 시 트랜잭션으로 게시판 생성 + 신청 업데이트
+      await sequelize.transaction(async (t) => {
+        // 게시판 생성
+        const newBoard = await Board.create(
+          {
+            board_name: boardRequest.requested_board_name,
+            board_type: boardRequest.requested_board_type,
+            board_audience: boardRequest.board_audience,
+          },
+          { transaction: t },
+        );
+
+        // 신청 상태 업데이트 + board_id 연결
+        await BoardRequest.update(
+          { request_status: "approved", board_id: newBoard.board_id },
+          { where: { request_id }, transaction: t },
+        );
+      });
+    } else {
+      // 4. 거절 시 상태만 변경
+      await BoardRequest.update(
+        { request_status: "rejected" },
+        { where: { request_id } },
+      );
+    }
+
+    res.status(200).json({
+      message: `게시판 개설 신청이 ${request_status === "approved" ? "승인" : "거절"}되었습니다.`,
+    });
+  } catch (err) {
+    console.error("게시판 개설 승인/거절 실패:", err);
+    res
+      .status(500)
+      .json({ error: "게시판 개설 승인/거절 중 오류가 발생했습니다." });
   }
 };
