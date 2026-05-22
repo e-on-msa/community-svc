@@ -438,6 +438,20 @@ exports.createReport = async ({
       });
   }
 
+  // 중복 신고 확인
+  const existingReport = await Report.findOne({
+    where: {
+      reporter_id,
+      ...(report_type === "post" ? { post_id } : { comment_id }),
+    },
+  });
+
+  if (existingReport) {
+    throw Object.assign(new Error("이미 신고한 게시글/댓글입니다."), {
+      status: 400,
+    });
+  }
+
   return await Report.create({
     reporter_id,
     report_type,
