@@ -49,4 +49,7 @@ router.patch(
   board.updateBoardRequestStatus,
 ); // 게시판 개설 승인/거절 (관리자 전용)
 
+// ── 관리자 신고 조회 (로그인 필요) ──────────────────
+router.get("/admin/reports", isLoggedIn, isAdmin, board.getReportList); // 신고 목록 조회 (관리자 전용)
+
 module.exports = router;

@@ -12,6 +12,7 @@ const {
   sequelize,
 } = require("../models");
 const userClient = require("./userClient");
+const { Op } = require("sequelize");
 
 // 게시글 작성
 exports.createPost = async ({ board_id, user_id, title, content, files }) => {
@@ -454,4 +455,23 @@ exports.createReport = async ({
     comment_id: report_type === "comment" ? comment_id : null,
     reason,
   });
+};
+
+// 신고 목록 조회 (관리자)
+exports.getReportList = async ({ report_type, page, limit }) => {
+  const offset = (page - 1) * limit;
+
+  const whereClause = {};
+  if (report_type === "post") whereClause.post_id = { [Op.not]: null };
+  else if (report_type === "comment")
+    whereClause.comment_id = { [Op.not]: null };
+
+  const { count, rows: reports } = await Report.findAndCountAll({
+    where: whereClause,
+    order: [["created_at", "DESC"]],
+    limit,
+    offset,
+  });
+
+  return { reports, total: count };
 };

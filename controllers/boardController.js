@@ -427,3 +427,38 @@ exports.createReport = async (req, res) => {
       .json({ error: err.message || "신고 접수 중 오류가 발생했습니다." });
   }
 };
+
+// 신고 목록 조회 (관리자)
+exports.getReportList = async (req, res) => {
+  const { report_type } = req.query;
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+
+  if (report_type && !["post", "comment"].includes(report_type)) {
+    return res
+      .status(400)
+      .json({ error: "report_type은 post 또는 comment여야 합니다." });
+  }
+
+  try {
+    const { reports, total } = await boardService.getReportList({
+      report_type,
+      page,
+      limit,
+    });
+    res.status(200).json({
+      reports,
+      pagination: {
+        total,
+        page,
+        limit,
+        total_pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (err) {
+    console.error("신고 목록 조회 실패:", err);
+    res
+      .status(err.status || 500)
+      .json({ error: err.message || "신고 목록 조회 중 오류가 발생했습니다." });
+  }
+};
