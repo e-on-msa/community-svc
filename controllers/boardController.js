@@ -4,9 +4,21 @@
 
 const boardService = require("../services/boardService");
 
-// TODO: 게시판 목록 조회
+// 게시판 목록 조회
 exports.getBoardList = async (req, res) => {
-  res.json({ message: "getBoardList - TODO" });
+  const user_type = req.headers["x-user-type"];
+
+  try {
+    const boards = await boardService.getBoardList({ user_type });
+    res.status(200).json({ boards });
+  } catch (err) {
+    console.error("게시판 목록 조회 실패:", err);
+    res
+      .status(err.status || 500)
+      .json({
+        error: err.message || "게시판 목록 조회 중 오류가 발생했습니다.",
+      });
+  }
 };
 
 // 게시글 작성
