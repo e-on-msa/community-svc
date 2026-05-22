@@ -12,7 +12,6 @@ const {
   sequelize,
 } = require("../models");
 const userClient = require("./userClient");
-const { Op } = require("sequelize");
 
 // 게시글 작성
 exports.createPost = async ({ board_id, user_id, title, content, files }) => {
