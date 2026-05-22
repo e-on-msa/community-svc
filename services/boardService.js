@@ -283,7 +283,7 @@ exports.deleteComment = async ({ comment_id, user_id, user_type }) => {
     throw Object.assign(new Error("삭제 권한이 없습니다."), { status: 403 });
   }
 
-  await Comment.destroy({ where: { comment_id } });
+  await comment.destroy();
 };
 
 // 게시판 개설 신청
