@@ -461,10 +461,9 @@ exports.createReport = async ({
 exports.getReportList = async ({ report_type, page, limit }) => {
   const offset = (page - 1) * limit;
 
-  const whereClause = {};
-  if (report_type === "post") whereClause.post_id = { [Op.not]: null };
-  else if (report_type === "comment")
-    whereClause.comment_id = { [Op.not]: null };
+  const whereClause = {
+    ...(report_type && { report_type }),
+  };
 
   const { count, rows: reports } = await Report.findAndCountAll({
     where: whereClause,
