@@ -16,6 +16,7 @@ community-svc/
 │   └── boardController.js   # 요청/응답 처리
 ├── middleware/
 │   ├── auth.js              # Gateway 헤더 기반 인증
+│   ├── checkBoardAccess.js  # 게시판 접근 권한 체크
 │   └── upload.js            # 이미지 업로드 (multer)
 ├── models/
 │   ├── index.js             # 모델 로드 및 관계 설정
