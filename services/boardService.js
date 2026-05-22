@@ -201,7 +201,7 @@ exports.deletePost = async ({ post_id, user_id, user_type }) => {
     throw Object.assign(new Error("삭제 권한이 없습니다."), { status: 403 });
   }
 
-  await Post.destroy({ where: { post_id } });
+  await post.destroy();
 };
 
 // 댓글 작성
