@@ -36,6 +36,9 @@ router.post(
 router.put("/comments/:comment_id", isLoggedIn, board.updateComment); // 댓글 수정
 router.delete("/comments/:comment_id", isLoggedIn, board.deleteComment); // 댓글 삭제
 
+// ── 신고 (로그인 필요) ────────────────
+router.post("/reports", isLoggedIn, board.createReport); // 신고 접수
+
 // ── 게시판 개설 신청 (로그인 필요) ────
 router.post("/board-requests", isLoggedIn, board.createBoardRequest); // 게시판 개설 신청
 router.get("/board-requests", isLoggedIn, isAdmin, board.getBoardRequestList); // 게시판 개설 신청 목록 조회 (관리자 전용)
