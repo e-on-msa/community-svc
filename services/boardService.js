@@ -170,9 +170,9 @@ exports.updatePost = async ({
   }
 
   await sequelize.transaction(async (t) => {
-    await Post.update(
+    await post.update(
       { title, content },
-      { where: { post_id }, transaction: t },
+      { transaction: t },
     );
 
     if (removed_image_ids?.length) {
