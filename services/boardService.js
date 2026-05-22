@@ -401,48 +401,43 @@ exports.createReport = async ({
   }
 
   // 신고 대상 존재 여부 확인
-  if (report_type === "post") {
-    if (!post_id)
-      throw Object.assign(new Error("post_id는 필수입니다."), { status: 400 });
-    const post = await Post.findByPk(post_id);
-    if (!post)
-      throw Object.assign(new Error("게시글을 찾을 수 없습니다."), {
-        status: 404,
-      });
-    if (post.user_id === reporter_id)
-      throw Object.assign(new Error("자신의 게시글은 신고할 수 없습니다."), {
-        status: 400,
-      });
-    if (post.status === "HIDDEN")
-      throw Object.assign(
-        new Error("숨김 처리된 게시글은 신고할 수 없습니다."),
-        { status: 403 },
-      );
-  } else {
-    if (!comment_id)
-      throw Object.assign(new Error("comment_id는 필수입니다."), {
-        status: 400,
-      });
-    const comment = await Comment.findByPk(comment_id);
-    if (!comment)
-      throw Object.assign(new Error("댓글을 찾을 수 없습니다."), {
-        status: 404,
-      });
-    if (comment.user_id === reporter_id)
-      throw Object.assign(new Error("자신의 댓글은 신고할 수 없습니다."), {
-        status: 400,
-      });
-    if (comment.status === "HIDDEN")
-      throw Object.assign(new Error("숨김 처리된 댓글은 신고할 수 없습니다."), {
-        status: 403,
-      });
+  const isPost = report_type === "post";
+  const targetId = isPost ? post_id : comment_id;
+  const targetModel = isPost ? Post : Comment;
+  const idFieldName = isPost ? "post_id" : "comment_id";
+  const typeName = isPost ? "게시글" : "댓글";
+
+  if (!targetId) {
+    throw Object.assign(new Error(`${idFieldName}는 필수입니다.`), {
+      status: 400,
+    });
+  }
+
+  const target = await targetModel.findByPk(targetId);
+  if (!target) {
+    throw Object.assign(new Error(`${typeName}을 찾을 수 없습니다.`), {
+      status: 404,
+    });
+  }
+
+  if (target.user_id === reporter_id) {
+    throw Object.assign(new Error(`자신의 ${typeName}은 신고할 수 없습니다.`), {
+      status: 400,
+    });
+  }
+
+  if (target.status === "HIDDEN") {
+    throw Object.assign(
+      new Error(`숨김 처리된 ${typeName}은 신고할 수 없습니다.`),
+      { status: 403 },
+    );
   }
 
   // 중복 신고 확인
   const existingReport = await Report.findOne({
     where: {
       reporter_id,
-      ...(report_type === "post" ? { post_id } : { comment_id }),
+      ...(isPost ? { post_id } : { comment_id }),
     },
   });
 
