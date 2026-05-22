@@ -455,3 +455,21 @@ exports.createReport = async ({
     reason,
   });
 };
+
+// 신고 목록 조회 (관리자)
+exports.getReportList = async ({ report_type, page, limit }) => {
+  const offset = (page - 1) * limit;
+
+  const whereClause = {
+    ...(report_type && { report_type }),
+  };
+
+  const { count, rows: reports } = await Report.findAndCountAll({
+    where: whereClause,
+    order: [["created_at", "DESC"]],
+    limit,
+    offset,
+  });
+
+  return { reports, total: count };
+};
