@@ -390,3 +390,40 @@ exports.updateBoardRequestStatus = async (req, res) => {
     });
   }
 };
+
+// 신고 접수
+exports.createReport = async (req, res) => {
+  const reporter_id = req.user.user_id;
+  const { report_type, post_id, comment_id, reason } = req.body;
+
+  if (!report_type || !reason) {
+    return res.status(400).json({ error: "report_type, reason은 필수입니다." });
+  }
+
+  try {
+    const report = await boardService.createReport({
+      reporter_id,
+      report_type,
+      post_id,
+      comment_id,
+      reason,
+    });
+
+    res.status(201).json({
+      report: {
+        report_id: report.report_id,
+        reporter_id: report.reporter_id,
+        report_type: report.report_type,
+        post_id: report.post_id,
+        comment_id: report.comment_id,
+        reason: report.reason,
+        created_at: report.created_at,
+      },
+    });
+  } catch (err) {
+    console.error("신고 접수 실패:", err);
+    res
+      .status(err.status || 500)
+      .json({ error: err.message || "신고 접수 중 오류가 발생했습니다." });
+  }
+};

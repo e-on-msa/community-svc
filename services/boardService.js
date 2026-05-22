@@ -8,6 +8,7 @@ const {
   Board,
   BoardRequest,
   Comment,
+  Report,
   sequelize,
 } = require("../models");
 const userClient = require("./userClient");
@@ -170,10 +171,7 @@ exports.updatePost = async ({
   }
 
   await sequelize.transaction(async (t) => {
-    await post.update(
-      { title, content },
-      { transaction: t },
-    );
+    await post.update({ title, content }, { transaction: t });
 
     if (removed_image_ids?.length) {
       await PostImage.destroy({
@@ -384,4 +382,67 @@ exports.updateBoardRequestStatus = async ({ request_id, request_status }) => {
       );
     });
   }
+};
+
+// 신고 접수
+exports.createReport = async ({
+  reporter_id,
+  report_type,
+  post_id,
+  comment_id,
+  reason,
+}) => {
+  // 신고 타입 유효성 검사
+  if (!["post", "comment"].includes(report_type)) {
+    throw Object.assign(
+      new Error("report_type은 post 또는 comment여야 합니다."),
+      { status: 400 },
+    );
+  }
+
+  // 신고 대상 존재 여부 확인
+  if (report_type === "post") {
+    if (!post_id)
+      throw Object.assign(new Error("post_id는 필수입니다."), { status: 400 });
+    const post = await Post.findByPk(post_id);
+    if (!post)
+      throw Object.assign(new Error("게시글을 찾을 수 없습니다."), {
+        status: 404,
+      });
+    if (post.user_id === reporter_id)
+      throw Object.assign(new Error("자신의 게시글은 신고할 수 없습니다."), {
+        status: 400,
+      });
+    if (post.status === "HIDDEN")
+      throw Object.assign(
+        new Error("숨김 처리된 게시글은 신고할 수 없습니다."),
+        { status: 403 },
+      );
+  } else {
+    if (!comment_id)
+      throw Object.assign(new Error("comment_id는 필수입니다."), {
+        status: 400,
+      });
+    const comment = await Comment.findByPk(comment_id);
+    if (!comment)
+      throw Object.assign(new Error("댓글을 찾을 수 없습니다."), {
+        status: 404,
+      });
+    if (comment.user_id === reporter_id)
+      throw Object.assign(new Error("자신의 댓글은 신고할 수 없습니다."), {
+        status: 400,
+      });
+    if (comment.status === "HIDDEN")
+      throw Object.assign(new Error("숨김 처리된 댓글은 신고할 수 없습니다."), {
+        status: 403,
+      });
+  }
+
+  return await Report.create({
+    reporter_id,
+    report_type,
+    post_id: report_type === "post" ? post_id : null,
+    comment_id: report_type === "comment" ? comment_id : null,
+    reason,
+  });
 };
