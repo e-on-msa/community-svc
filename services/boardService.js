@@ -13,6 +13,22 @@ const {
 } = require("../models");
 const userClient = require("./userClient");
 
+// 게시판 목록 조회
+exports.getBoardList = async ({ user_type }) => {
+  const whereClause =
+    user_type === "admin"
+      ? {}
+      : user_type === "student" || user_type === "parent"
+        ? { board_audience: ["all", user_type] }
+        : { board_audience: "all" }; // 비로그인
+
+  return await Board.findAll({
+    where: whereClause,
+    attributes: ["board_id", "board_name", "board_type", "board_audience"],
+    order: [["board_id", "ASC"]],
+  });
+};
+
 // 게시글 작성
 exports.createPost = async ({ board_id, user_id, title, content, files }) => {
   const user = await userClient.getUserById(user_id);
