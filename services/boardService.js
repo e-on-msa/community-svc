@@ -270,7 +270,7 @@ exports.updateComment = async ({ comment_id, user_id, user_type, content }) => {
     throw Object.assign(new Error("수정 권한이 없습니다."), { status: 403 });
   }
 
-  await Comment.update({ content }, { where: { comment_id } });
+  await comment.update({ content });
 };
 
 // 댓글 삭제
