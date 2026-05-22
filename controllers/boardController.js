@@ -196,6 +196,9 @@ exports.createComment = async (req, res) => {
   }
 
   const board_id = Number(req.params.board_id);
+  if (isNaN(board_id)) {
+    return res.status(400).json({ error: "유효하지 않은 게시판 ID입니다." });
+  }
   const user_id = req.user.user_id;
   const { content, parent_comment_id } = req.body;
 
