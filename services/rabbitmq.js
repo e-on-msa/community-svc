@@ -3,7 +3,7 @@
 const amqp = require("amqplib");
 const { Post, Comment, Board, BoardRequest, sequelize } = require("../models");
 
-const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://localhost";
+const RABBITMQ_URL = process.env.RABBITMQ_URL;
 
 // 이벤트 핸들러
 const handlers = {
