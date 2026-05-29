@@ -103,8 +103,15 @@ exports.connect = async () => {
     }
 
     conn.on("error", (err) => console.error("[RabbitMQ] 연결 오류:", err));
-    conn.on("close", () => console.warn("[RabbitMQ] 연결 종료"));
+    conn.on("close", () => {
+      console.warn("[RabbitMQ] 연결 종료. 5초 후 재연결을 시도합니다.");
+      setTimeout(tryConnect, 5000);
+    });
   } catch (err) {
-    console.error("[RabbitMQ] 연결 실패 (이벤트 수신 비활성화):", err.message);
+    console.error(
+      "[RabbitMQ] 연결 실패. 5초 후 재연결을 시도합니다:",
+      err.message,
+    );
+    setTimeout(tryConnect, 5000);
   }
 };
