@@ -11,8 +11,16 @@ const handlers = {
   "user.deactivated": async (payload) => {
     // 탈퇴 시 게시글/댓글을 HIDDEN 처리
     const { userId } = payload;
-    await Post.update({ status: "HIDDEN" }, { where: { user_id: userId } });
-    await Comment.update({ status: "HIDDEN" }, { where: { user_id: userId } });
+    await sequelize.transaction(async (t) => {
+      await Post.update(
+        { status: "HIDDEN" },
+        { where: { user_id: userId }, transaction: t },
+      );
+      await Comment.update(
+        { status: "HIDDEN" },
+        { where: { user_id: userId }, transaction: t },
+      );
+    });
 
     console.log(`[RabbitMQ] user.deactivated 처리 완료 userId=${userId}`);
   },
@@ -20,8 +28,16 @@ const handlers = {
   "user.suspended": async (payload) => {
     // 정지 시 게시글/댓글을 HIDDEN 처리
     const { userId } = payload;
-    await Post.update({ status: "HIDDEN" }, { where: { user_id: userId } });
-    await Comment.update({ status: "HIDDEN" }, { where: { user_id: userId } });
+    await sequelize.transaction(async (t) => {
+      await Post.update(
+        { status: "HIDDEN" },
+        { where: { user_id: userId }, transaction: t },
+      );
+      await Comment.update(
+        { status: "HIDDEN" },
+        { where: { user_id: userId }, transaction: t },
+      );
+    });
 
     console.log(`[RabbitMQ] user.suspended 처리 완료 userId=${userId}`);
   },
@@ -30,8 +46,16 @@ const handlers = {
   "user.unsuspended": async (payload) => {
     // 정지 해제 시 게시글/댓글을 ACTIVE로 복원
     const { userId } = payload;
-    await Post.update({ status: "ACTIVE" }, { where: { user_id: userId } });
-    await Comment.update({ status: "ACTIVE" }, { where: { user_id: userId } });
+    await sequelize.transaction(async (t) => {
+      await Post.update(
+        { status: "ACTIVE" },
+        { where: { user_id: userId }, transaction: t },
+      );
+      await Comment.update(
+        { status: "ACTIVE" },
+        { where: { user_id: userId }, transaction: t },
+      );
+    });
 
     console.log(`[RabbitMQ] user.unsuspended 처리 완료 userId=${userId}`);
   },
