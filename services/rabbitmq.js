@@ -111,6 +111,11 @@ exports.connect = async () => {
     for (const [eventName, handler] of Object.entries(handlers)) {
       const queueName = `community.${eventName}`;
       await channel.assertQueue(queueName, { durable: true });
+
+      // Exchange 선언 + 바인딩 추가
+      await channel.assertExchange("eon.events", "topic", { durable: true });
+      await channel.bindQueue(queueName, "eon.events", eventName);
+
       channel.consume(queueName, async (msg) => {
         if (!msg) return;
         try {
