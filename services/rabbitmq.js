@@ -112,7 +112,7 @@ exports.connect = async () => {
       const queueName = `community.${eventName}`;
       await channel.assertQueue(queueName, { durable: true });
 
-      // Exchange 선언 + 바인딩 추가
+      // Exchange 선언 + 바인딩 추가 (향후 다른 서비스에서도 동일한 이벤트를 구독할 수 있도록)
       await channel.assertExchange("user.events", "topic", { durable: true });
       await channel.bindQueue(queueName, "user.events", eventName);
 
