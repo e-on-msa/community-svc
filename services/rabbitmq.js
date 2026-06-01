@@ -113,8 +113,8 @@ exports.connect = async () => {
       await channel.assertQueue(queueName, { durable: true });
 
       // Exchange 선언 + 바인딩 추가
-      await channel.assertExchange("eon.events", "topic", { durable: true });
-      await channel.bindQueue(queueName, "eon.events", eventName);
+      await channel.assertExchange("user.events", "topic", { durable: true });
+      await channel.bindQueue(queueName, "user.events", eventName);
 
       channel.consume(queueName, async (msg) => {
         if (!msg) return;
