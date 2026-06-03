@@ -8,7 +8,11 @@ app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use("/uploads", require("express").static("uploads"));
 
 // 라우터
+// 외부 공개 API
 app.use("/api/boards", require("./routes/boardRoute"));
+
+// 서비스 내부 API
+app.use("/internal", require("./routes/internalRoute"));
 
 // 에러 핸들러
 app.use((err, req, res, next) => {
