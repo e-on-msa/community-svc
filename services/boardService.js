@@ -489,3 +489,23 @@ exports.getReportList = async ({ report_type, page, limit }) => {
 
   return { reports, total: count };
 };
+
+// 사용자 활동 조회 (Internal API)
+exports.getUserActivities = async (userId) => {
+  const [posts, comments, boardRequests] = await Promise.all([
+    Post.findAll({
+      where: { user_id: userId },
+      attributes: ["title", "content"],
+    }),
+    Comment.findAll({
+      where: { user_id: userId },
+      attributes: ["content"],
+    }),
+    BoardRequest.findAll({
+      where: { user_id: userId },
+      attributes: ["requested_board_name"],
+    }),
+  ]);
+
+  return { posts, comments, boardRequests };
+};

@@ -13,11 +13,9 @@ exports.getBoardList = async (req, res) => {
     res.status(200).json({ boards });
   } catch (err) {
     console.error("게시판 목록 조회 실패:", err);
-    res
-      .status(err.status || 500)
-      .json({
-        error: err.message || "게시판 목록 조회 중 오류가 발생했습니다.",
-      });
+    res.status(err.status || 500).json({
+      error: err.message || "게시판 목록 조회 중 오류가 발생했습니다.",
+    });
   }
 };
 
@@ -472,5 +470,16 @@ exports.getReportList = async (req, res) => {
     res
       .status(err.status || 500)
       .json({ error: err.message || "신고 목록 조회 중 오류가 발생했습니다." });
+  }
+};
+
+// 사용자 활동 조회 (Internal API)
+exports.getUserActivities = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const result = await boardService.getUserActivities(Number(userId));
+    res.json(result);
+  } catch (err) {
+    res.status(err.status || 500).json({ message: err.message });
   }
 };

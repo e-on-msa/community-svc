@@ -7,6 +7,9 @@ const board = require("../controllers/boardController");
 
 // 라우트 추가 시 "고정 경로 먼저" -> "동적 경로 나중에"
 
+// ── Internal API ──────────────────────
+router.get("/internal/activities/user/:userId", board.getUserActivities);
+
 // ── 읽기 (비로그인 허용) ──────────────
 router.get("/", board.getBoardList); // 게시판 목록 조회
 router.get("/:board_id/posts", checkBoardAccess, board.getPostList); // 게시글 목록 조회
