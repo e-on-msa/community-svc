@@ -344,8 +344,25 @@ exports.getBoardRequestList = async ({ page, limit }) => {
     limit,
     offset,
   });
+  // 각 신청자 이름 조회
+  const requestsWithName = await Promise.all(
+    requests.map(async (request) => {
+      try {
+        const user = await userClient.getUserById(request.user_id);
+        return {
+          ...request.toJSON(),
+          requester_name: user?.name || "알 수 없음",
+        };
+      } catch {
+        return {
+          ...request.toJSON(),
+          requester_name: "알 수 없음",
+        };
+      }
+    }),
+  );
 
-  return { requests, total: count };
+  return { requests: requestsWithName, total: count };
 };
 
 // 게시판 개설 승인/거절 (관리자)
