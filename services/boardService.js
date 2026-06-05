@@ -502,7 +502,7 @@ exports.getReportList = async ({ report_type, page, limit }) => {
     include: [
       {
         model: Post,
-        attributes: ["board_id"],
+        attributes: ["board_id", "title", "content"],
         required: false, // comment 신고일 때 post_id null이어서 LEFT JOIN
       },
     ],
