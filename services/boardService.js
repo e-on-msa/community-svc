@@ -482,6 +482,13 @@ exports.getReportList = async ({ report_type, page, limit }) => {
 
   const { count, rows: reports } = await Report.findAndCountAll({
     where: whereClause,
+    include: [
+      {
+        model: Post,
+        attributes: ["board_id"],
+        required: false, // comment 신고일 때 post_id null이어서 LEFT JOIN
+      },
+    ],
     order: [["created_at", "DESC"]],
     limit,
     offset,
