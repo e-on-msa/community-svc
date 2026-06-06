@@ -373,22 +373,26 @@ exports.updateBoardRequestStatus = async (req, res) => {
     return res.status(400).json({ error: "유효하지 않은 신청 ID입니다." });
   }
 
-  const { request_status } = req.body;
+  const { request_status, action } = req.body;
+  const status = request_status || action;
 
-  if (!request_status) {
+  if (!status) {
     return res.status(400).json({ error: "request_status는 필수입니다." });
   }
 
-  if (!["approved", "rejected"].includes(request_status)) {
+  if (!["approved", "rejected"].includes(status)) {
     return res
       .status(400)
       .json({ error: "request_status는 approved 또는 rejected여야 합니다." });
   }
 
   try {
-    await boardService.updateBoardRequestStatus({ request_id, request_status });
+    await boardService.updateBoardRequestStatus({
+      request_id,
+      request_status: status,
+    });
     res.status(200).json({
-      message: `게시판 개설 신청이 ${request_status === "approved" ? "승인" : "거절"}되었습니다.`,
+      message: `게시판 개설 신청이 ${status === "approved" ? "승인" : "거절"}되었습니다.`,
     });
   } catch (err) {
     if (err.message === "ALREADY_PROCESSED") {
