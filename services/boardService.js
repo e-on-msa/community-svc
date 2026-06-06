@@ -263,6 +263,9 @@ exports.createComment = async ({
   }
 
   const user = await userClient.getUserById(user_id);
+
+  // author_name 가져오는 로그
+  console.log(`[user-svc 통신] userId=${user_id}, author_name=${user.name}`);
   if (!user)
     throw Object.assign(new Error("사용자 정보를 찾을 수 없습니다."), {
       status: 404,
