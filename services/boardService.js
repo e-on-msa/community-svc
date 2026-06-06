@@ -399,6 +399,10 @@ exports.updateBoardRequestStatus = async ({ request_id, request_status }) => {
         { transaction: t },
       );
 
+      console.log(
+        `[게시판 개설 승인] board_id=${newBoard.board_id}, board_name=${newBoard.board_name}`,
+      );
+
       await boardRequest.update(
         { request_status: "approved", board_id: newBoard.board_id },
         { transaction: t },
